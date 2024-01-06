@@ -52,8 +52,7 @@ func (f *Float64) Set(val float64) {
 }
 
 func (f *Float64) UnmarshalJSON(data []byte) error {
-    if bytes.Equal(data, null) {
-        f.Valid = false
+    if bytes.Equal(data, null) || bytes.Equal(data, empty) || bytes.Equal(data, []byte("")) {
         return nil
     }
     if err := json.Unmarshal(data, &f.Value); err != nil {

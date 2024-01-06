@@ -52,8 +52,7 @@ func (s *String) Set(val string) {
 }
 
 func (s *String) UnmarshalJSON(data []byte) error {
-    if bytes.Equal(data, null) {
-        s.Valid = false
+    if bytes.Equal(data, null) || bytes.Equal(data, empty) || bytes.Equal(data, []byte("")) {
         return nil
     }
     if err := json.Unmarshal(data, &s.Value); err != nil {

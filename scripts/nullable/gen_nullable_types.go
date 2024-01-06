@@ -24,6 +24,7 @@ const (
 	Float64 = "float64"
 	Bool    = "bool"
 	Byte    = "byte"
+	Time    = "time"
 )
 
 var TYPES = []string{
@@ -42,18 +43,21 @@ var TYPES = []string{
 	Float64,
 	Bool,
 	Byte,
+	Time,
 }
 
 var (
-	PATH_PROJECT_ROOT = GetProjectRootDir()
-	PATH_MOD_FILE     = PATH_PROJECT_ROOT + "/go.mod"
-	TEMPLATE_PATH     = PATH_PROJECT_ROOT + "/scripts/nullable/" + TEMPLATE_FILE
+	PATH_PROJECT_ROOT  = GetProjectRootDir()
+	PATH_MOD_FILE      = PATH_PROJECT_ROOT + "/go.mod"
+	TEMPLATE_PATH      = PATH_PROJECT_ROOT + "/scripts/nullable/" + TEMPLATE_FILE
+	TEMPLATE_TEST_PATH = PATH_PROJECT_ROOT + "/scripts/nullable/" + TEMPLATE_TEST_FILE
 )
 
 const (
 	ProjectRootEnvVar      = "PROJECT_ROOT"
 	CurrentDirectoryEnvVar = "PWD"
 	TEMPLATE_FILE          = "nullable_types.gotoml"
+	TEMPLATE_TEST_FILE     = "nullable_types_test.gotoml"
 )
 
 type Nullable struct {
@@ -81,8 +85,9 @@ func GetProjectRootDir() string {
 	}
 }
 
-func main() {
+func generate_types() {
 	nullableTemplate := template.Must(template.New(TEMPLATE_FILE).ParseFiles(TEMPLATE_PATH))
+	nullableTestTemplate := template.Must(template.New(TEMPLATE_TEST_FILE).ParseFiles(TEMPLATE_TEST_PATH))
 	nullableTypes := make([]Nullable, 0)
 	for _, t := range TYPES {
 		nullableTypes = append(nullableTypes, Nullable{Type: t})
@@ -95,9 +100,24 @@ func main() {
 		}
 		defer file.Close()
 
+		testfile, err := os.Create(filepath.Join(PATH_PROJECT_ROOT, nt.Type+"_test.go"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer testfile.Close()
+
 		if err := nullableTemplate.Execute(file, nt); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := nullableTestTemplate.Execute(testfile, nt); err != nil {
 			log.Fatal(err)
 		}
 	}
 
+
+}
+
+func main() {
+	generate_types()
 }
