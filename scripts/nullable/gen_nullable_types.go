@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -22,6 +23,8 @@ const (
 	Float32 = "float32"
 	Float64 = "float64"
 	Bool    = "bool"
+	Byte    = "byte"
+	Time    = "time.Time"
 )
 
 var TYPES = []string{
@@ -39,6 +42,7 @@ var TYPES = []string{
 	Float32,
 	Float64,
 	Bool,
+	Byte,
 }
 
 var (
@@ -50,11 +54,23 @@ var (
 const (
 	ProjectRootEnvVar      = "PROJECT_ROOT"
 	CurrentDirectoryEnvVar = "PWD"
-	TEMPLATE_FILE          = "nullable_types.gotmpl"
+	TEMPLATE_FILE          = "nullable_types.gotoml"
 )
 
 type Nullable struct {
-	NullableType string
+	Type string
+}
+
+func (n Nullable) Short() string {
+	if len(n.Type) > 0 {
+		return n.Type[0:1]
+	}
+
+	return ""
+}
+
+func (n Nullable) NullableType() string {
+	return strings.ToUpper(n.Short()) + n.Type[1:]
 }
 
 func GetProjectRootDir() string {
@@ -70,15 +86,14 @@ func main() {
 	nullableTemplate := template.Must(template.New(TEMPLATE_FILE).ParseFiles(TEMPLATE_PATH))
 	nullableTypes := make([]Nullable, 0)
 	for _, t := range TYPES {
-		nullableTypes = append(nullableTypes, Nullable{NullableType: t})
+		nullableTypes = append(nullableTypes, Nullable{Type: t})
 	}
 
 	for _, nt := range nullableTypes {
-		file, err := os.Create(filepath.Join(PATH_PROJECT_ROOT, "nullable", nt.NullableType+".go"))
+		file, err := os.Create(filepath.Join(PATH_PROJECT_ROOT, nt.Type+".go"))
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		defer file.Close()
 
 		if err := nullableTemplate.Execute(file, nt); err != nil {

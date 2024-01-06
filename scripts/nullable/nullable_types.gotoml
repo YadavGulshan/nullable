@@ -3,3 +3,122 @@
 package nullable
 
 
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
+)
+
+// Compile time validation that our types implement the expected interfaces
+var (
+	_ runtime.Validatable        = &{{ .NullableType }}{}
+	_ runtime.ContextValidatable = &{{ .NullableType }}{}
+	_ runtime.Validatable        = &{{ .NullableType }}Slice{}
+	_ runtime.ContextValidatable = &{{ .NullableType }}Slice{}
+)
+
+// {{ .NullableType }} represents a {{ .Type }} that may be null
+type {{ .NullableType }} struct {
+	Valid   bool // Valid is true if value is not null and valid {{ .Type }}
+	Value   {{ .Type }}
+}
+
+// New{{ .NullableType }} creates a new {{ .NullableType }} object
+func New{{ .NullableType }}(val *{{ .Type }}) {{ .NullableType }} {
+    if val == nil {
+        return {{ .NullableType }}{}
+    }
+    return {{ .NullableType }}{
+        Valid: true,
+        Value: *val,
+    }
+}
+
+// Returns nil if not present or valid. Otherwise it will
+// return a pointer to the value.
+func ({{ .Short }} *{{ .NullableType }}) Get() *{{ .Type }} {
+    if !{{ .Short }}.Valid {
+        return nil
+    }
+    return &{{ .Short }}.Value
+}
+
+// Set sets the value and valid flag to true
+func ({{ .Short }} *{{ .NullableType }}) Set(val {{ .Type }}) {
+    {{ .Short }}.Valid = true
+    {{ .Short }}.Value = val
+}
+
+func ({{ .Short }} *{{ .NullableType }}) UnmarshalJSON(data []byte) error {
+    if bytes.Equal(data, null) {
+        {{ .Short }}.Valid = false
+        return nil
+    }
+    if err := json.Unmarshal(data, &{{ .Short }}.Value); err != nil {
+        return err
+    }
+    {{ .Short }}.Valid = true
+    return nil
+}
+
+// Validate implements runtime.Validateable interface from github.com/go-openapi/runtime
+func ({{ .Short }} *{{ .NullableType }}) Validate(formats strfmt.Registry) error {
+    return nil 
+}
+
+// ContextValidate implements runtime.ContextValidatable from github.com/go-openapi/runtime
+func ({{ .Short }} *{{ .NullableType }}) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// {{ .NullableType }}Slice represents a []{{ .Type }} that may be null
+type {{ .NullableType }}Slice struct {
+	Valid   bool // Valid is true if value is not null
+	Value   []{{ .Type }}
+}
+
+
+// New{{ .NullableType }}Slice creates a new {{ .NullableType }}Slice object
+func New{{ .NullableType }}Slice(val []{{ .Type }}) {{ .NullableType }}Slice {
+    if val == nil {
+        return {{ .NullableType }}Slice{}
+    }
+    return {{ .NullableType }}Slice{
+        Valid: true,
+        Value: val,
+    }
+}
+
+// UnmarshalJSON implements json.Marshaler interface.
+func ({{ .Short }} *{{ .NullableType }}Slice) UnmarshalJSON(data []byte) error {
+    if bytes.Equal(data, null) {
+        {{ .Short }}.Valid = false
+        return nil
+    }
+    if err := json.Unmarshal(data, &{{ .Short }}.Value); err != nil {
+        return err
+    }
+    {{ .Short }}.Valid = true
+    return nil
+}
+
+// Returns nil if not present or valid. Otherwise it will
+// return a pointer to the value.
+func ({{ .Short }} *{{ .NullableType }}Slice) Get() *[]{{ .Type }} {
+    if !{{ .Short }}.Valid {
+        return nil
+    }
+    return &{{ .Short }}.Value
+}
+
+// Validate implements runtime.Validateable interface from github.com/go-openapi/runtime
+func ({{ .Short }} *{{ .NullableType }}Slice) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate implements runtime.ContextValidatable from github.com/go-openapi/runtime
+func ({{ .Short }} *{{ .NullableType }}Slice) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
