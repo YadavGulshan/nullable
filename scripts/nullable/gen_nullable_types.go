@@ -24,7 +24,6 @@ const (
 	Float64 = "float64"
 	Bool    = "bool"
 	Byte    = "byte"
-	Time    = "time.Time"
 )
 
 var TYPES = []string{
